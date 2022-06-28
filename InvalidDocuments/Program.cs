@@ -11,11 +11,13 @@ using Microsoft.Xrm.Sdk.Metadata;
 using System.IO.Compression;
 using System.Collections.Generic;
 using System.Threading;
-using Microsoft.TeamFoundation.WorkItemTracking.Process.WebApi.Models;
 using System.Text.RegularExpressions;
 using Microsoft.TeamFoundation.Common;
 using System.ServiceModel;
 using Microsoft.TeamFoundation.Client.CommandLine;
+using Microsoft.TeamFoundation.WorkItemTracking.Process.WebApi.Models;
+using Microsoft.Xrm.Tooling.Connector;
+using System.Diagnostics;
 
 namespace invalidDocuments
 {
@@ -230,26 +232,30 @@ namespace invalidDocuments
             DateTime? invalidDate = new DateTime();
 
 
-            PickList picklist = new PickList();
+            Dictionary<string, CrmDataTypeWrapper> maybe = new Dictionary<string, CrmDataTypeWrapper>();
+            maybe.Add("OP bez série", new CrmDataTypeWrapper(123, CrmFieldType.Picklist));
 
-
-            /* List<string> picklistAttrib = new List<string>();
+            /*PickList picklist = new PickList();
+          
+             List<string> picklistAttrib = new List<string>();
              picklistAttrib.Add("805210000");
              picklistAttrib.Add("80521000");
              picklistAttrib.Add("805210002");
              picklistAttrib.Add("805210003");
 
              picklist.Items = picklistAttrib;*/
-
+            OptionSetValueCollection types = new OptionSetValueCollection();
+            types.Add(new OptionSetValue(1));
+            types.Add(new OptionSetValue(2));
 
             PicklistAttributeMetadata documentTypePicklist = new PicklistAttributeMetadata()
             {
                 SchemaName = "acm_documenttype",
-                LogicalName = "acm_listinvaliddocument",
-                DisplayName = new Label("Typ dokladu", czechLanguageCode),
+                LogicalName = "acm_documenttype",
+                //DisplayName = new Label("Typ dokladu", czechLanguageCode),
                 OptionSet = new OptionSetMetadata()
                 {
-                    IsGlobal = false,
+                    //IsGlobal = false,
                     OptionSetType = OptionSetType.Picklist,
                     Options =
                     {
@@ -260,7 +266,7 @@ namespace invalidDocuments
                     }
                 }
             };
-
+            documentTypePicklist.DefaultFormValue = 805210000;
 
 
             Entity record = new Entity();
@@ -273,7 +279,9 @@ namespace invalidDocuments
                 record.Attributes.Add(new KeyValuePair<string, object>("acm_invalidationdate", DateTime.Parse(invalidationDate)));
             else
                 record.Attributes.Add(new KeyValuePair<string, object>("acm_invalidationdate", invalidDate = null));
-            // record.Attributes.Add(new KeyValuePair<string, object>("acm_documenttype", picklist));
+            //Thread.Sleep(1000);
+            //record.Attributes["acm_documenttype"] = types;
+            //record.Attributes.Add(new KeyValuePair<string, object>("acm_documenttype", new OptionMetadata(new Label("OP bez série", czechLanguageCode), 805210000)));
 
             try
             {
@@ -381,7 +389,7 @@ namespace invalidDocuments
 
         static int Main(string[] args)
         {
-            if (args.Length == 0)
+            if (args.Length < 2)
                 return (int)ExitCode.Failure;
 
             string username = args[0];
